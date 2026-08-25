@@ -2,6 +2,7 @@ import boto3
 import argparse
 import os, sys
 import json
+from botocore.exceptions import NoCredentialsError
 from datetime import datetime as dt
 
 
@@ -16,27 +17,32 @@ def main():
     parser.add_argument("filename", nargs ='?', default = None)
     parser.add_argument("bucketname", nargs = '?', default = None)
     args = parser.parse_args()
-    
-    # attempt to find filename and return error if not found
-    if args.filename is None and args.bucketname is None:
-       generate_report()
 
-    elif args.filename is not None and args.bucketname is not None:
+    # check for proper program usage
+    # also check if the credentials are even loaded
+    try:
         # attempt to find filename and return error if not found
-        if pathExists(args.filename) is False:
-            print(f"Could not find file with name {args.filename}")
-            sys.exit(1)
-        # otherwise upload file and generate the report
-        upload_file(args.bucketname, args.filename) 
-        generate_report()
+        if args.filename is None and args.bucketname is None:
+            generate_report()
 
-    elif args.filename is not None and args.bucketname is None:
-        print("Correct Usage is: [pathtoFileName] [BucketName]")
-        sys.exit(1)
+        elif args.filename is not None and args.bucketname is not None:
+            # attempt to find filename and return error if not found
+            if pathExists(args.filename) is False:
+                print(f"Could not find file with name {args.filename}")
+                sys.exit(1)
 
-    elif args.filename is None and args.bucketname is not None:
-        print("Correct Usage is: [pathtoFileName] [BucketName]")
-        sys.exit(1)
+            # otherwise upload file and generate the report
+            upload_file(args.bucketname, args.filename) 
+            generate_report()
+
+        elif args.filename is not None and args.bucketname is None:
+            parser.error("Path to filename and a bucketname are both required")
+
+        elif args.filename is None and args.bucketname is not None:
+            parser.error("Path to filename and a bucketname are both required")
+            
+    except NoCredentialsError: # no aws credentials found
+        print("No AWS credentials are loaded. Please run credentials with 'aws configure'")
 
 # determines if the filename exists
 def pathExists(filename):
@@ -129,7 +135,6 @@ def generate_report():
     instance_data = describe_instances()
     bucket_names = list_all_buckets()
     buckets = []
-    bucket_meta = {}
 
     # Put names of buckets and their respective sizes in a list of dicts
     for bucket in bucket_names:
