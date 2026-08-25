@@ -1,0 +1,15 @@
+{
+  "Bucket": [
+    {
+      "Name": "resource-manager-kstevens-82126",
+      "Size": 458
+    }
+  ],
+  "Instance": [
+    {
+      "InstanceId": "i-0e40564287baaf525",
+      "InstanceType": "t3.micro",
+      "State": "running"
+    }
+  ]
+}

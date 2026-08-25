@@ -1,13 +1,46 @@
 import boto3
-import os
+import argparse
+import os, sys
 import json
 from datetime import datetime as dt
 
 
 def main():
-    # generate_report() # generate the a JSON report to the project directory
-    ...
 
+    parser = argparse.ArgumentParser(
+        prog="AWS_Resource_Manager",
+        description="Reads S3 Buckets and describes EC2 Instances",
+        epilog="Example: python main.py path/ToMy/FavoriteFile.txt",
+    )
+
+    parser.add_argument("filename", nargs ='?', default = None)
+    parser.add_argument("bucketname", nargs = '?', default = None)
+    args = parser.parse_args()
+    
+    # attempt to find filename and return error if not found
+    if args.filename is None and args.bucketname is None:
+       generate_report()
+
+    elif args.filename is not None and args.bucketname is not None:
+        # attempt to find filename and return error if not found
+        if pathExists(args.filename) is False:
+            print(f"Could not find file with name {args.filename}")
+            sys.exit(1)
+        # otherwise upload file and generate the report
+        upload_file(args.bucketname, args.filename) 
+        generate_report()
+
+    elif args.filename is not None and args.bucketname is None:
+        print("Correct Usage is: [pathtoFileName] [BucketName]")
+        sys.exit(1)
+
+    elif args.filename is None and args.bucketname is not None:
+        print("Correct Usage is: [pathtoFileName] [BucketName]")
+        sys.exit(1)
+
+# determines if the filename exists
+def pathExists(filename):
+    return os.path.exists(filename)
 
 # list the names of all the buckets
 def list_all_buckets():
